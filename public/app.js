@@ -5,6 +5,7 @@ const messageDisplay = document.querySelector('.message-container')
 flag.classList.add('filter')
 
 const input = document.getElementById('inputCountry')
+const sugestoes = document.querySelector('.sugestoes')
 const bttn = document.getElementById('idButton')
 const hints = document.querySelector('.hints-container')
 
@@ -20,6 +21,8 @@ let numberOfGuesses = 0
 let countriesNames = []
 let countryData
 let countryInfo = []
+let countries
+let gameOver = false
 
 let getFlag = () => {
     fetch('https://restcountries.com/v3.1/all')
@@ -27,8 +30,10 @@ let getFlag = () => {
         return response.json()
     })
     .then(json => {
-        console.log(json)
+        debugger
+        countries = json
         countryData = json[index]
+        console.log(countryData)
         flag.src = json[index].flags.svg
         nameCountry = json[index].name.common
         console.log(nameCountry)
@@ -36,7 +41,7 @@ let getFlag = () => {
         json.forEach((el, index) => {
             countriesNames[index] = el.name.common
         })
-
+        
         getCountryInfo(countryData)
         console.log(`As informações do pais ${countryInfo}`)
         console.log(countriesNames)
@@ -46,12 +51,16 @@ let getFlag = () => {
 let getCountryInfo = (countryData) => {
     countryInfo.push(countryData.continents[0])
     
-    debugger
     let currencies = JSON.stringify(countryData.currencies)
     let currenciesArray = currencies.split('"')
-    countryInfo.push(currenciesArray[5])
-
-    countryInfo.push(countryData.borders)
+    countryInfo.push(formatNameCurrency(currenciesArray[5]))
+    
+    let fronteiras = countryData.borders ? countryData.borders : 'No Borders'
+    if (fronteiras != 'No Borders'){
+        countryInfo.push(formatBorders(fronteiras))
+    }else{
+        countryInfo.push(fronteiras)
+    }
     
     debugger
     let lang = JSON.stringify(countryData.languages)
@@ -67,6 +76,7 @@ let checkCountry = () => {
     if (guessedCountry == nameCountry){
         bttn.disabled = true
         showMessage("Parabéns!")
+        gameOver = true
     }
 }
 
@@ -82,20 +92,81 @@ let isGameOver = () => {
 
 let guess = () => {
     checkCountry()
+    clearInput()
     debugger
-    if (numberOfGuesses < 5 && !isGameOver()){
+    if (numberOfGuesses < 5){
         let label = document.getElementById(`label-${numberOfGuesses}`)
         let input = document.createElement('input')
         input.value = countryInfo[numberOfGuesses]
         input.readOnly = true
         label.appendChild(input)
+        label.classList.remove('label-hide')
         numberOfGuesses++
-        return
     } else {
-        bttn.disabled = true
-        showMessage("Deveu!")
+        if (!gameOver){
+            bttn.disabled = true
+            showMessage("Deveu!")
+        }
     }
 }
+
+let formatNameCurrency = (currency) => {
+    let currencyArr = currency.split(" ")
+    return currencyArr.pop()
+}
+
+let formatBorders = (borders) => {
+    let bordersArr =[]
+    for (let border of borders){
+        countries.forEach(el => {
+            if (el.cca3 == border){
+                bordersArr.push(el.name.common)
+            }
+        })
+    }
+    return bordersArr.join(', ')
+}
+
+let autocomplete = (country) => {
+    return countriesNames.filter(el => {
+        let elUpper = el.toUpperCase()
+        let countryUpper = country.toUpperCase()
+
+        return elUpper.includes(countryUpper)
+    })
+}
+
+let clearInput = () => {
+    sugestoes.innerHTML = ""
+    input.value = ""
+}
+
+let clickSugestion = (e) =>{
+    input.value = e.target.textContent
+    sugestoes.innerHTML = ""
+}
+
+let generateListAutoComplete = (value) => {
+    debugger
+    let itemLista = document.createElement('li')
+    let botao = document.createElement('button')
+    botao.textContent = value
+    botao.setAttribute('onclick', "clickSugestion(event)")
+    itemLista.appendChild(botao)
+    return itemLista
+}
+
+input.addEventListener('input', ({ target }) => {
+    const dadosDoCampo = target.value
+    sugestoes.innerHTML=""
+    if(dadosDoCampo.length) {
+       const autoCompleteValores = autocomplete(dadosDoCampo)
+       autoCompleteValores.map((value) => {
+           sugestoes.appendChild(generateListAutoComplete(value))
+        })
+        
+     }
+})
 
 getFlag()
 console.log(index)

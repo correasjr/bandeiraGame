@@ -4,7 +4,7 @@
 }
 
 body {
-    background-color: #75635c;
+    background-color: #121213
 }
 
 .game-container {
@@ -36,8 +36,8 @@ body {
 .flag-container {
     display: flex;
     justify-content: center;
-    size: 4rem;
-    padding: 2rem 6rem 6rem;
+    size: 100%;
+    padding: 2px 6px 6px;
 }
 
 img {
@@ -46,7 +46,7 @@ img {
 }
 
 .input-container {
-    width: 510px;
+    width: 75%;
     display: flex;
     justify-content: center;
 }
@@ -66,23 +66,35 @@ button {
 }
 
 .hints-container {
-    display: flex;
-    flex-direction: column;
     padding: 2.5rem;
 }
 
 .hints-container input {
     display: inline-block;
     width: auto;
+    font-weight: bolder;
+    background-color: #9c9c9c;
+    text-align: center;
 }
 
 .hints-container label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: medium;
     font-weight: bold;
 }
 
+.label-hide {
+    visibility: collapse;
+}
+
 .hints-container div {
     padding: 15px;
+}
+
+ul {
+    list-style-type: none;
 }
 
 .filter{
