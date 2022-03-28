@@ -75,26 +75,30 @@ let checkCountry = () => {
 
     if (guessedCountry == nameCountry){
         bttn.disabled = true
-        showMessage("Parabéns!")
+        showMessage("right", "Parabéns!", 60000)
         gameOver = true
+        input.readOnly = true
     }
 }
 
-let showMessage = (message) => {
+let showMessage = (typeMessage, message, time) => {
+    let messageContainer = document.querySelector('.message-container')
     let messageElement = document.createElement('p')
+
     messageElement.textContent = message
+    messageContainer.classList.add(typeMessage)
+
     messageDisplay.appendChild(messageElement)
+
+    setTimeout(() => messageContainer.removeChild(messageElement), time)
 }
 
 let isGameOver = () => {
     return bttn.disabled
 }
 
-let guess = () => {
-    checkCountry()
-    clearInput()
-    debugger
-    if (numberOfGuesses < 5){
+let showHint = () => {
+    if(!gameOver){
         let label = document.getElementById(`label-${numberOfGuesses}`)
         let input = document.createElement('input')
         input.value = countryInfo[numberOfGuesses]
@@ -102,11 +106,24 @@ let guess = () => {
         label.appendChild(input)
         label.classList.remove('label-hide')
         numberOfGuesses++
-    } else {
-        if (!gameOver){
-            bttn.disabled = true
-            showMessage("Deveu!")
+    }
+}
+
+let guess = () => {
+    if (isVazio()){
+        checkCountry()
+        clearInput()
+        if (numberOfGuesses < 5){
+            showHint()
+        } else {
+            if (!gameOver){
+                bttn.disabled = true
+                showMessage("wrong", nameCountry, 10000)
+                input.readOnly = true
+            }
         }
+    }else{
+        showMessage("warning", "Insira um país válido", 2000)
     }
 }
 
@@ -156,6 +173,13 @@ let generateListAutoComplete = (value) => {
     return itemLista
 }
 
+let isVazio = () => {
+    if(!input.value || !countriesNames.includes(input.value)){
+        return false
+    }
+    return true
+}
+
 input.addEventListener('input', ({ target }) => {
     const dadosDoCampo = target.value
     sugestoes.innerHTML=""
@@ -166,6 +190,13 @@ input.addEventListener('input', ({ target }) => {
         })
         
      }
+})
+
+input.addEventListener('keypress', (event) => {
+    debugger
+    if (event.key == "Enter"){
+        guess()
+    }
 })
 
 getFlag()
