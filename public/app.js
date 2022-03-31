@@ -1,3 +1,5 @@
+import { traduzir } from "./translate.js"
+
 const flagDisplay = document.querySelector('.flag-container')
 const flag = document.createElement("img")
 flagDisplay.appendChild(flag)
@@ -15,6 +17,7 @@ let randomIntFromInterval = (min, max) => {
 }
 
 let index = randomIntFromInterval(1, 251)
+//let index = 72
 let nameCountry
 let numberOfGuesses = 0
 
@@ -30,44 +33,79 @@ let getFlag = () => {
         return response.json()
     })
     .then(json => {
-        debugger
         countries = json
         countryData = json[index]
-        console.log(countryData)
+        //console.log(countryData)
         flag.src = json[index].flags.svg
-        nameCountry = json[index].name.common
-        console.log(nameCountry)
+        nameCountry = json[index].translations.por.common
+        //console.log(nameCountry)
         
         json.forEach((el, index) => {
-            countriesNames[index] = el.name.common
+            countriesNames[index] = el.translations.por.common
         })
         
         getCountryInfo(countryData)
-        console.log(`As informações do pais ${countryInfo}`)
-        console.log(countriesNames)
-    }).catch(err => console.log(err))
+        //console.log(`As informações do pais ${countryInfo}`)
+        //console.log(countriesNames)
+        return traduzir(countryInfo[1])
+    })
+    .then(tradCurrency => {
+        countryInfo[1] = tradCurrency
+        return traduzir(countryInfo[4])
+    })
+    .then(tradCapital => {
+        //console.log("tradução funfou? " + tradCapital)
+        countryInfo[4] = tradCapital
+
+        return traduzir(countryInfo[3])
+        
+    })
+    .then(tradLang => {
+        //console.log("tradução lang funfou?" + tradLang)
+        countryInfo[3] = tradLang
+    })
+    .catch(err => console.log(err))
 }
 
 let getCountryInfo = (countryData) => {
-    countryInfo.push(countryData.continents[0])
+    let continent
+    switch (countryData.continents[0]){
+        case 'North America':
+            continent = 'América do Norte'
+            break
+        case 'South America':
+            continent = 'América do Sul'
+            break
+        case 'Europe':
+            continent = 'Europa'
+            break
+        case 'Asia':
+            continent = 'Ásia'
+            break
+        case 'Africa':
+            continent = 'África'
+            break
+        default:
+            continent = countryData.continents[0]
+    }
+    countryInfo.push(continent)
     
     let currencies = JSON.stringify(countryData.currencies)
     let currenciesArray = currencies.split('"')
     countryInfo.push(formatNameCurrency(currenciesArray[5]))
     
-    let fronteiras = countryData.borders ? countryData.borders : 'No Borders'
-    if (fronteiras != 'No Borders'){
+    let fronteiras = countryData.borders ? countryData.borders : 'Sem Fronteiras'
+    if (fronteiras != 'Sem Fronteiras'){
         countryInfo.push(formatBorders(fronteiras))
     }else{
         countryInfo.push(fronteiras)
     }
     
-    debugger
     let lang = JSON.stringify(countryData.languages)
     let langArry = lang.split('"')
     countryInfo.push(langArry[3])
-
-    countryInfo.push(countryData.capital)
+    debugger
+    countryInfo.push(countryData.capital[0])
 }
 
 let checkCountry = () => {
@@ -129,7 +167,10 @@ let guess = () => {
 
 let formatNameCurrency = (currency) => {
     let currencyArr = currency.split(" ")
-    return currencyArr.pop()
+    let currencyName = currencyArr.pop()
+    let currencyNameArr = currencyName.split("")
+    currencyNameArr[0] = currencyNameArr[0].toUpperCase()
+    return currencyNameArr.join("")
 }
 
 let formatBorders = (borders) => {
@@ -137,7 +178,7 @@ let formatBorders = (borders) => {
     for (let border of borders){
         countries.forEach(el => {
             if (el.cca3 == border){
-                bordersArr.push(el.name.common)
+                bordersArr.push(el.translations.por.common)
             }
         })
     }
@@ -164,14 +205,20 @@ let clickSugestion = (e) =>{
 }
 
 let generateListAutoComplete = (value) => {
-    debugger
     let itemLista = document.createElement('li')
     let botao = document.createElement('button')
+    botao.classList.add('botaoSugest')
     botao.textContent = value
-    botao.setAttribute('onclick', "clickSugestion(event)")
     itemLista.appendChild(botao)
     return itemLista
 }
+
+//executa a ação dos botões de sugestão de país
+document.addEventListener('click',function(e){
+    if(e.target && e.target.classList.contains('botaoSugest')){
+          clickSugestion(e)
+     }
+ });
 
 let isVazio = () => {
     if(!input.value || !countriesNames.includes(input.value)){
@@ -193,11 +240,11 @@ input.addEventListener('input', ({ target }) => {
 })
 
 input.addEventListener('keypress', (event) => {
-    debugger
     if (event.key == "Enter"){
         guess()
     }
 })
+bttn.addEventListener('click', guess)
 
 getFlag()
 console.log(index)
